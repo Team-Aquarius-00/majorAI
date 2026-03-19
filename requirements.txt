@@ -1,0 +1,23 @@
+# Core vision & ML
+opencv-python>=4.11.0
+numpy>=1.26.4
+mediapipe>=0.10.20
+ultralytics>=8.3.62       # YOLOv11 (object detection)
+
+# Face verification
+face-recognition>=1.3.0
+face_recognition_models>=0.3.0
+# dlib MUST be installed manually before this file:
+#   pip install dlib-19.22.99-cp310-cp310-win_amd64.whl   (Windows + Python 3.10)
+#   pip install dlib                                        (Linux / Mac)
+
+# Audio detection
+PyAudio>=0.2.14
+
+# ML backend (required by ultralytics/mediapipe)
+torch>=2.5.1
+torchvision>=0.20.1
+
+# Utilities
+Pillow>=11.1.0
+pytz>=2024.2
