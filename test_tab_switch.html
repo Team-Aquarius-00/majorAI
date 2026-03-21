@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tab Switch Detection Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #f0f0f0;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+      }
+      .info-box {
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .controls {
+        margin: 20px 0;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 14px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .btn-start {
+        background-color: #4caf50;
+        color: white;
+      }
+      .btn-start:hover {
+        background-color: #45a049;
+      }
+      .btn-stop {
+        background-color: #f44336;
+        color: white;
+      }
+      .btn-stop:hover {
+        background-color: #da190b;
+      }
+      .btn-reset {
+        background-color: #2196f3;
+        color: white;
+      }
+      .btn-reset:hover {
+        background-color: #0b7dda;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .stat-card {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+      .stat-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #2196f3;
+      }
+      .stat-label {
+        color: #666;
+        font-size: 14px;
+        margin-top: 5px;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        display: none;
+      }
+      .status.active {
+        display: block;
+        background-color: #4caf50;
+        color: white;
+      }
+      .status.terminated {
+        display: block;
+        background-color: #f44336;
+        color: white;
+      }
+      .log {
+        background-color: #f5f5f5;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+        margin-top: 20px;
+      }
+      .log-entry {
+        padding: 5px;
+        border-bottom: 1px solid #eee;
+      }
+      .log-entry:last-child {
+        border-bottom: none;
+      }
+      .instructions {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 Tab Switch Detection Test</h1>
+
+      <div class="instructions">
+        <strong>How to Test:</strong>
+        <ol>
+          <li>Click "START DETECTION" below</li>
+          <li>Switch to another tab or window (Alt+Tab, Ctrl+T, etc.)</li>
+          <li>Switch back to this page</li>
+          <li>Observe the counter increase</li>
+          <li>After 5 switches, the session should auto-terminate</li>
+        </ol>
+      </div>
+
+      <div class="info-box">
+        <strong>ℹ️ What this tests:</strong> Browser Page Visibility API detects
+        when this page loses/gains focus. Only 'visible → hidden' transitions
+        count as switches.
+      </div>
+
+      <div class="controls">
+        <button class="btn-start" onclick="startDetection()">
+          ▶ START DETECTION
+        </button>
+        <button class="btn-stop" onclick="stopDetection()">
+          ⏹ STOP DETECTION
+        </button>
+        <button class="btn-reset" onclick="resetTest()">🔄 RESET</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value" id="switchCount">0</div>
+          <div class="stat-label">Tab Switches Detected</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="maxAllowed">5</div>
+          <div class="stat-label">Max Allowed Switches</div>
+        </div>
+      </div>
+
+      <div class="log">
+        <div
+          style="
+            font-weight: bold;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #999;
+          "
+        >
+          Event Log:
+        </div>
+        <div id="logContainer"></div>
+      </div>
+    </div>
+
+    <script src="tab_switch_detection.js"></script>
+    <script>
+      let testActive = false;
+      let switchCount = 0;
+
+      function addLog(message) {
+        const logContainer = document.getElementById("logContainer");
+        const timestamp = new Date().toLocaleTimeString();
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        entry.textContent = `[${timestamp}] ${message}`;
+        logContainer.appendChild(entry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+
+      function startDetection() {
+        if (testActive) {
+          alert("Detection already running!");
+          return;
+        }
+
+        testActive = true;
+        switchCount = 0;
+        addLog("✓ Tab switch detection STARTED");
+
+        const statusDiv = document.getElementById("status");
+        statusDiv.className = "status active";
+        statusDiv.textContent =
+          "🟢 Detection is ACTIVE - Try switching tabs now!";
+
+        initTabSwitchDetection({
+          maxSwitches: 5,
+          initialCount: 0,
+          onSwitch: count => {
+            switchCount = count;
+            document.getElementById("switchCount").textContent = count;
+            addLog(`⚠️  Tab switch detected! Count: ${count}/5`);
+
+            if (count <= 3) {
+              alert(
+                `Tab switch #${count} detected.\nRemaining switches: ${5 - count}`,
+              );
+            }
+          },
+          onTerminate: message => {
+            testActive = false;
+            const statusDiv = document.getElementById("status");
+            statusDiv.className = "status terminated";
+            statusDiv.textContent = "🔴 TERMINATED: " + message;
+            addLog("❌ Session TERMINATED - Max switches exceeded!");
+          },
+        });
+      }
+
+      function stopDetection() {
+        stopTabSwitchDetection();
+        testActive = false;
+        const statusDiv = document.getElementById("status");
+        statusDiv.className = "";
+        statusDiv.style.display = "none";
+        addLog("◼️  Tab switch detection STOPPED");
+      }
+
+      function resetTest() {
+        stopDetection();
+        switchCount = 0;
+        document.getElementById("switchCount").textContent = "0";
+        document.getElementById("logContainer").innerHTML = "";
+        addLog("🔄 Test RESET - Ready to start again");
+      }
+
+      // Log initial state
+      addLog("Test page loaded. Click START DETECTION to begin.");
+    </script>
+  </body>
+</html>

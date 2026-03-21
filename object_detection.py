@@ -107,3 +107,62 @@ def detectObject(frame, confidence_threshold=CONFIDENCE_THRESHOLD, resize_width=
         raise
 
     return labels_this_frame, frame, person_count, detected_objects
+
+
+if __name__ == "__main__":
+    print("=" * 70)
+    print("YOLO OBJECT DETECTION - Real-time")
+    print("=" * 70)
+    print("Controls: Press 'q' to quit, 's' for screenshot\n")
+
+    # Open webcam
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Error: Could not open webcam!")
+        exit(1)
+
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    frame_count = 0
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Error: Failed to grab frame")
+            break
+
+        frame_count += 1
+
+        try:
+            labels, annotated_frame, person_count, detected_objects = detectObject(
+                frame
+            )
+
+            # Print detections every 30 frames
+            if frame_count % 30 == 0:
+                print(
+                    f"[Frame {frame_count}] Persons: {person_count} | Objects: {detected_objects}"
+                )
+
+            # Display frame
+            cv2.imshow("Object Detection - YOLOv11", annotated_frame)
+
+            # Handle key press
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
+                print("Quitting...")
+                break
+            elif key == ord("s"):
+                filename = f"object_detection_{frame_count}.jpg"
+                cv2.imwrite(filename, annotated_frame)
+                print(f"Screenshot saved: {filename}")
+
+        except Exception as e:
+            print(f"Error processing frame: {e}")
+            continue
+
+    # Cleanup
+    cap.release()
+    cv2.destroyAllWindows()
+    print("Object detection ended.")
